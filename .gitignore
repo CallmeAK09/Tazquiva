@@ -1,6 +1,10 @@
 # Python
 __pycache__/
 *.py[cod]
+*.egg-info/
+.pytest_cache/
+.coverage
+htmlcov/
 
 # Virtual environments
 .venv/
@@ -16,10 +20,12 @@ db.sqlite3
 media/
 staticfiles/
 
-# Testing
-.pytest_cache/
-.coverage
-htmlcov/
+# Node.js
+node_modules/
+dist/
+
+# Frontend tooling
+.eslintcache
 
 # IDEs
 .vscode/
