@@ -38,7 +38,9 @@ THIRD_PARTY_APPS = [
     "drf_spectacular",
 ]
 
-LOCAL_APPS = []
+LOCAL_APPS = [
+    "features.accounts.apps.AccountsConfig",
+]
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
 
@@ -144,3 +146,7 @@ STATIC_ROOT = BASE_DIR / "staticfiles"
 # Default Model Configuration
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+# Default User Model
+
+AUTH_USER_MODEL = "accounts.User"
