@@ -1,6 +1,6 @@
 from django.urls import path
 
-from features.accounts.presentation.api.views import get_user_by_id
+from features.accounts.presentation.api.views import get_user_by_id, create_user
 
 
 app_name = "accounts_api"
@@ -11,4 +11,5 @@ urlpatterns = [
         get_user_by_id,
         name="user-detail",
     ),
+    path("users/", create_user, name="user-create"),
 ]
