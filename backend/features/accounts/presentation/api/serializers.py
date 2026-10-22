@@ -36,3 +36,39 @@ class CreateUserSerializer(serializers.Serializer):
                 "A user with this email already exists."
             )
         return value
+
+
+class UpdateUserSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+    user_name = serializers.CharField(max_length=150)
+    is_active = serializers.BooleanField(required=False)
+
+    def validate_email(self, value):
+        user_id = self.context.get("user_id")
+
+        queryset = UserModel.objects.filter(email=value)
+
+        if user_id:
+            queryset = queryset.exclude(id=user_id)
+
+        if queryset.exists():
+            raise serializers.ValidationError(
+                "A user with this email already exists."
+            )
+
+        return value
+
+    def validate_user_name(self, value):
+        user_id = self.context.get("user_id")
+
+        queryset = UserModel.objects.filter(user_name=value)
+
+        if user_id:
+            queryset = queryset.exclude(id=user_id)
+
+        if queryset.exists():
+            raise serializers.ValidationError(
+                "A user with this username already exists."
+            )
+
+        return value
