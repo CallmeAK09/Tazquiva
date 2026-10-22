@@ -5,6 +5,7 @@ from django.db import transaction
 from features.accounts.application.interfaces.user_repository import UserRepository
 from features.accounts.domain.entities.user import User as UserEntity
 from features.accounts.infrastructure.persistence.models.user_model import User as UserModel
+from features.accounts.domain.entities.user import User
 
 
 class DjangoUserRepository(UserRepository):
@@ -81,3 +82,22 @@ class DjangoUserRepository(UserRepository):
         user.save(update_fields=["password"])
 
         return True
+
+    def authenticate(self, email: str, password: str) -> User | None:
+        user_model = UserModel.objects.filter(email=email).first()
+
+        if user_model is None:
+            return None
+
+        if not user_model.is_active:
+            return None
+
+        if not user_model.check_password(password):
+            return None
+
+        return User(
+            id=user_model.id,
+            email=user_model.email,
+            user_name=user_model.user_name,
+            is_active=user_model.is_active,
+        )

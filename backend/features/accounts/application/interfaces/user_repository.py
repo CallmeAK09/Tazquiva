@@ -29,3 +29,9 @@ class UserRepository(ABC):
     @abstractmethod
     def change_password(self, user_id: UUID, current_password: str, new_password: str ) -> bool:
         pass
+
+
+    @abstractmethod
+    def authenticate(self, email: str, password: str) -> User | None:
+        """Authenticate a user using email and password."""
+        pass

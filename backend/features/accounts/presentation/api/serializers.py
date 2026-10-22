@@ -5,6 +5,7 @@ from features.accounts.infrastructure.persistence.models.user_model import (
     User as UserModel,
 )
 
+
 class UserSerializer(serializers.Serializer):
     id = serializers.UUIDField(read_only=True)
     email = serializers.EmailField(read_only=True)
@@ -19,6 +20,7 @@ class UserSerializer(serializers.Serializer):
             "is_active": instance.is_active,
         }
 
+
 class CreateUserSerializer(serializers.Serializer):
     email = serializers.EmailField()
     user_name = serializers.CharField(max_length=150)
@@ -29,7 +31,7 @@ class CreateUserSerializer(serializers.Serializer):
                 "A user with this username already exists."
             )
         return value
-    
+
     def validate_email(self, value):
         if UserModel.objects.filter(email=value).exists():
             raise serializers.ValidationError(
@@ -45,7 +47,6 @@ class UpdateUserSerializer(serializers.Serializer):
 
     def validate_email(self, value):
         user_id = self.context.get("user_id")
-
         queryset = UserModel.objects.filter(email=value)
 
         if user_id:
@@ -60,7 +61,6 @@ class UpdateUserSerializer(serializers.Serializer):
 
     def validate_user_name(self, value):
         user_id = self.context.get("user_id")
-
         queryset = UserModel.objects.filter(user_name=value)
 
         if user_id:
@@ -98,3 +98,11 @@ class ChangePasswordSerializer(serializers.Serializer):
 
         validate_password(value)
         return value
+
+
+class LoginSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+    password = serializers.CharField(
+        write_only=True,
+        trim_whitespace=False,
+    )
