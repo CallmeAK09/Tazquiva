@@ -39,8 +39,8 @@ class CreateUserSerializer(serializers.Serializer):
 
 
 class UpdateUserSerializer(serializers.Serializer):
-    email = serializers.EmailField()
-    user_name = serializers.CharField(max_length=150)
+    email = serializers.EmailField(required=False)
+    user_name = serializers.CharField(max_length=150, required=False)
     is_active = serializers.BooleanField(required=False)
 
     def validate_email(self, value):
@@ -72,3 +72,11 @@ class UpdateUserSerializer(serializers.Serializer):
             )
 
         return value
+
+    def validate(self, attrs):
+        if not attrs:
+            raise serializers.ValidationError(
+                "At least one field must be provided."
+            )
+
+        return attrs
