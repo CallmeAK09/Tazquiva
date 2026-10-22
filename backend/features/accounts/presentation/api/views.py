@@ -1,22 +1,28 @@
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
+from rest_framework_simplejwt.tokens import RefreshToken
 
-from features.accounts.domain.entities.user import User
+from features.accounts.application.use_cases.change_password import ChangePassword
 from features.accounts.application.use_cases.create_user import CreateUser
 from features.accounts.application.use_cases.delete_user import DeleteUser
 from features.accounts.application.use_cases.get_user_by_id import GetUserById
+from features.accounts.application.use_cases.login_user import LoginUser
 from features.accounts.application.use_cases.update_user import UpdateUser
-from features.accounts.application.use_cases.change_password import ChangePassword
+from features.accounts.domain.entities.user import User
+from features.accounts.infrastructure.persistence.models.user_model import (
+    User as UserModel,
+)
 from features.accounts.infrastructure.persistence.repositories.django_user_repository import (
     DjangoUserRepository,
 )
 from features.accounts.presentation.api.serializers import (
+    ChangePasswordSerializer,
     CreateUserSerializer,
+    LoginSerializer,
     UpdateUserSerializer,
     UserSerializer,
-    ChangePasswordSerializer
 )
 
 
@@ -136,5 +142,37 @@ def change_password(request):
 
     return Response(
         {"detail": "Password changed successfully."},
+        status=status.HTTP_200_OK,
+    )
+
+
+@api_view(["POST"])
+@permission_classes([AllowAny])
+def login(request):
+    serializer = LoginSerializer(data=request.data)
+    serializer.is_valid(raise_exception=True)
+
+    use_case = LoginUser(DjangoUserRepository())
+    user = use_case.execute(
+        email=serializer.validated_data["email"],
+        password=serializer.validated_data["password"],
+    )
+
+    if user is None:
+        return Response(
+            {"detail": "Invalid email or password."},
+            status=status.HTTP_401_UNAUTHORIZED,
+        )
+
+    refresh = RefreshToken.for_user(
+        UserModel.objects.get(id=user.id)
+    )
+
+    return Response(
+        {
+            "user": UserSerializer(user).data,
+            "access": str(refresh.access_token),
+            "refresh": str(refresh),
+        },
         status=status.HTTP_200_OK,
     )
