@@ -36,7 +36,7 @@ def create_user(request):
     )
 
 
-@api_view(["GET", "PUT", "DELETE"])
+@api_view(["GET", "PUT", "PATCH", "DELETE"])
 def get_user_by_id(request, user_id):
     user_repository = DjangoUserRepository()
     get_user_use_case = GetUserById(user_repository)
@@ -48,17 +48,39 @@ def get_user_by_id(request, user_id):
             {"detail": "User not found."},
             status=status.HTTP_404_NOT_FOUND,
         )
-    if request.method == "PUT":
+
+    if request.method in ["PUT", "PATCH"]:
         serializer = UpdateUserSerializer(
             data=request.data,
             context={"user_id": user_id},
         )
+
         serializer.is_valid(raise_exception=True)
+
+        if request.method == "PUT":
+            required_fields = ["email", "user_name"]
+            missing_fields = [
+                field
+                for field in required_fields
+                if field not in serializer.validated_data
+            ]
+
+            if missing_fields:
+                return Response(
+                    {
+                        field: ["This field is required."]
+                        for field in missing_fields
+                    },
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
 
         updated_user = User(
             id=user.id,
-            email=serializer.validated_data["email"],
-            user_name=serializer.validated_data["user_name"],
+            email=serializer.validated_data.get("email", user.email),
+            user_name=serializer.validated_data.get(
+                "user_name",
+                user.user_name,
+            ),
             is_active=serializer.validated_data.get(
                 "is_active",
                 user.is_active,
@@ -74,7 +96,7 @@ def get_user_by_id(request, user_id):
             response_serializer.data,
             status=status.HTTP_200_OK,
         )
-    
+
     if request.method == "DELETE":
         delete_use_case = DeleteUser(user_repository)
         delete_use_case.execute(user_id)
