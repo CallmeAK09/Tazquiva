@@ -1,12 +1,14 @@
 from rest_framework import status
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
+from rest_framework.permissions import IsAuthenticated
 
+from features.accounts.domain.entities.user import User
 from features.accounts.application.use_cases.create_user import CreateUser
 from features.accounts.application.use_cases.delete_user import DeleteUser
 from features.accounts.application.use_cases.get_user_by_id import GetUserById
 from features.accounts.application.use_cases.update_user import UpdateUser
-from features.accounts.domain.entities.user import User
+from features.accounts.application.use_cases.change_password import ChangePassword
 from features.accounts.infrastructure.persistence.repositories.django_user_repository import (
     DjangoUserRepository,
 )
@@ -14,6 +16,7 @@ from features.accounts.presentation.api.serializers import (
     CreateUserSerializer,
     UpdateUserSerializer,
     UserSerializer,
+    ChangePasswordSerializer
 )
 
 
@@ -107,5 +110,31 @@ def get_user_by_id(request, user_id):
 
     return Response(
         serializer.data,
+        status=status.HTTP_200_OK,
+    )
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def change_password(request):
+    serializer = ChangePasswordSerializer(data=request.data)
+    serializer.is_valid(raise_exception=True)
+
+    use_case = ChangePassword(DjangoUserRepository())
+
+    success = use_case.execute(
+        user_id=request.user.id,
+        current_password=serializer.validated_data["current_password"],
+        new_password=serializer.validated_data["new_password"],
+    )
+
+    if not success:
+        return Response(
+            {"current_password": ["Current password is incorrect."]},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    return Response(
+        {"detail": "Password changed successfully."},
         status=status.HTTP_200_OK,
     )

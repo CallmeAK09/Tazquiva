@@ -65,3 +65,19 @@ class DjangoUserRepository(UserRepository):
     @transaction.atomic
     def delete(self, user_id: UUID) -> None:
         UserModel.objects.filter(id=user_id).delete()
+
+    def change_password(
+        self,
+        user_id: UUID,
+        current_password: str,
+        new_password: str,
+    ) -> bool:
+        user = UserModel.objects.filter(id=user_id).first()
+
+        if user is None or not user.check_password(current_password):
+            return False
+
+        user.set_password(new_password)
+        user.save(update_fields=["password"])
+
+        return True
