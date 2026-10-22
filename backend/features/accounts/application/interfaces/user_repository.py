@@ -27,10 +27,5 @@ class UserRepository(ABC):
         pass
 
     @abstractmethod
-    def change_password(    
-        self,
-        user_id: UUID,
-        current_password: str,
-        new_password: str,
-    ) -> bool:
+    def change_password(self, user_id: UUID, current_password: str, new_password: str ) -> bool:
         pass
